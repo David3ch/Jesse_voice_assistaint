@@ -6,6 +6,7 @@ import speech_recognition as sr
 from gtts import gTTS
 import datetime
 import subprocess
+import webbrowser
 
 engine = pyttsx3.init()
 
@@ -53,7 +54,7 @@ def get_audio():
                 print("Exception: " + str(e))
 
     
-    return said
+    return said.lower()
 
 def note(text):
     date = datetime.datetime.now()
@@ -68,6 +69,8 @@ def open_program(program_name):
     except Exception as e:
         print(f"Failed to open {program_name}: {e}")
 
+Wake_words = ['hey jessie', 'jessie', 'hey jessie', 'ok jessie', 'jessie wake up', 'wake up jessie', 'hello jessie', 'hi jessie']
+
 
 NOTE_WORDS = ["make a note", "write this down", "remember this"]
 PROGRAM_WORDS = ["open program", "launch", "run", "start", "open"]
@@ -79,18 +82,37 @@ PROGRAMS = {
     "code": "/snap/bin/code"
 }
 
-text_from_user = get_audio()
 
 
-if any(word in text_from_user for word in NOTE_WORDS):
-    speak("What would you like me to write down?")
-    note_text = get_audio()
-    note(note_text)
-    speak("I've made a note of that.")
+while True:
+    print("Listening...")
+    text_from_user = get_audio()
 
-if any(word in text_from_user for word in PROGRAM_WORDS):
-    speak("Which program would you like me to open?")
-    program_name = get_audio().lower()
-    program_path = PROGRAMS.get(program_name)
-    open_program(program_path)
-    speak(f"Opening {program_name}.")
+
+    if any(word in text_from_user for word in Wake_words):
+        speak("Yes Mister White, how can I help you?")
+        text_from_user = get_audio()
+
+        if any(word in text_from_user for word in NOTE_WORDS):
+            speak("What would you like me to write down?")
+            note_text = get_audio()
+            note(note_text)
+            speak("I've made a note of that.")
+
+        if any(word in text_from_user for word in PROGRAM_WORDS):
+            speak("Which program would you like me to open?")
+            program_name = get_audio()
+            program_path = PROGRAMS.get(program_name)
+            open_program(program_path)
+            speak(f"Opening {program_name}.")
+            if program_path == "/usr/bin/google-chrome":
+                speak('What would you like me to search for?')
+                search_query = get_audio()
+                search_url = f"https://www.google.com/search?q={search_query}"
+                webbrowser.open(search_url)
+
+    if 'stop' in text_from_user or 'exit' in text_from_user:
+        speak("Goodbye!")
+        break
+
+
